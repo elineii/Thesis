@@ -9,7 +9,6 @@ library("glue")
 
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
-set.seed(42) 
 
 # --------------------------
 # Генерация данных
@@ -26,15 +25,8 @@ corr_12 <- 0.4
 corr_13 <- -0.6
 corr_23 <- 0.3
 
-n_array <- c(
-  #25, 
-  50, 
-  100, 
-  500, 
-  1000 
-  #5000
-  )  # Число наблюдений
-iter_all <- 50                               # Число итераций
+n_array <- c(25, 50, 100, 500, 1000, 5000)  # Число наблюдений
+iter_all <- 50                              # Число итераций
 
 for (n in n_array) {
   for (num_iter in 1:iter_all){

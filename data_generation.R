@@ -1,5 +1,7 @@
 library(glue)
 
+# Занулить beta_3
+
 data_generate <- function(n=1000,
                           name_exp=1,
                           num_iter=1,
