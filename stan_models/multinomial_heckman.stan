@@ -33,7 +33,7 @@ data {
   int<lower=0> k_2;                    // число предикторов для уравнения интенсивности
   matrix[n, k_1] w;                    // выборка для уравнений отбора
   matrix[n, k_2] x;                    // выборка для уравнения интенсивности
-  matrix[n, 1] y;                      // значение таргета уравнения интенсивности
+  vector[n] y;                         // значение таргета уравнения интенсивности
 }
 
 // Указываем параметры
@@ -49,7 +49,7 @@ parameters {
 }
 
 transformed parameters {
-  vector[k] beta_3;
+  vector[k_1] gamma_3;
   real sigma_1;
   matrix[n, 2] mu_transformed_1;
   matrix[n, 2] mu_transformed_2;
@@ -61,26 +61,24 @@ transformed parameters {
   matrix[2, 2] Sigma_1;
   matrix[2, 2] Sigma_2;
   matrix[2, 2] Sigma_3;
-  vector[3] initial_mu_1;
-  vector[1] initial_mu_2;
+  row_vector[3] initial_mu_1;
+  row_vector[1] initial_mu_2;
   matrix[3, 3] initial_sigma_11;
-  matrix[3, 1] initial_sigma_12;
-  matrix[1, 3] initial_sigma_21;
+  row_vector[3] initial_sigma_12;
+  row_vector[3] initial_sigma_21;
   real initial_sigma_22;
-  vector[3] conditional_mu;
-  matrix[3, 3] conditional_sigma;
 
-  beta_3 = rep_vector(0, k);
+  gamma_3 = rep_vector(0, k_1);
   sigma_1 = 1;
   
-  mu_transformed_1[, 1] = (x * (beta_2-beta_1));
-  mu_transformed_1[, 2] = (x * (beta_3-beta_1));
+  mu_transformed_1[, 1] = (x * (gamma_2-gamma_1));
+  mu_transformed_1[, 2] = (x * (gamma_3-gamma_1));
   
-  mu_transformed_2[, 1] = (x * (beta_1-beta_2));
-  mu_transformed_2[, 2] = (x * (beta_3-beta_2));
+  mu_transformed_2[, 1] = (x * (gamma_1-gamma_2));
+  mu_transformed_2[, 2] = (x * (gamma_3-gamma_2));
   
-  mu_transformed_3[, 1] = (x * (beta_1-beta_3));
-  mu_transformed_3[, 2] = (x * (beta_2-beta_3));
+  mu_transformed_3[, 1] = (x * (gamma_1-gamma_3));
+  mu_transformed_3[, 2] = (x * (gamma_2-gamma_3));
   
   transformation_matrix_1 = [
     [1, -1, 0],
@@ -111,19 +109,21 @@ transformed parameters {
   initial_mu_2 = [0];
   initial_sigma_11 = Sigma;
   initial_sigma_12 = [rho_1u * sigma_u, rho_2u * sigma_2 * sigma_u];
-  initial_sigma_21 = [rho_1u * sigma_u, sigma_2u * sigma_2 * sigma_u, 0];
-  initial_sigma_22 = [sigma_u ^ 2];
+  initial_sigma_21 = [rho_1u * sigma_u, rho_2u * sigma_2 * sigma_u, 0];
+  initial_sigma_22 = sigma_u ^ 2;
 }
 
 // Описываем модель
 
 model {
   real log_likelihood_sum = 0;
-  vector[3] conditional_mu;
+  row_vector[3] conditional_mu;
   matrix[3, 3] conditional_sigma;  
   
   // priors
-  rho_12 ~ normal(0.4, 0.1);
+  rho_12 ~ normal(0, 1);
+  rho_1u ~ normal(0, 1);
+  rho_2u ~ normal(0, 1);
 
   for (i in 1:n){
     if (y[i] == (-1)) {
@@ -149,8 +149,8 @@ model {
     if (y[i] != (-1)) {
       conditional_mu = initial_mu_1 + initial_sigma_12 * (1 / initial_sigma_22) * (y[i] - x[i] * beta);
       conditional_sigma = initial_sigma_11 - initial_sigma_12 * (1 / initial_sigma_22) * initial_sigma_21;
-      conditional_mu_transformed[, 1] = x * (beta_2-beta_1) - (conditional_mu[1] - conditional_mu[2]);
-      conditional_mu_transformed[, 2] = x * (beta_3-beta_1) - (conditional_mu[1] - conditional_mu[3]);
+      conditional_mu_transformed[, 1] = x * (gamma_2-gamma_1) - (conditional_mu[1] - conditional_mu[2]);
+      conditional_mu_transformed[, 2] = x * (gamma_3-gamma_1) - (conditional_mu[1] - conditional_mu[3]);
       conditional_sigma_transformed = transformation_matrix_1 * conditional_sigma * transformation_matrix_1';
       
       log_likelihood_sum = log_likelihood_sum + log(
@@ -161,7 +161,7 @@ model {
           conditional_sigma_transformed[2,2], 
           conditional_sigma_transformed[1,2]
           )
-        );
+        ) + normal(x * beta, sigma_u);
     }
   }
 }
