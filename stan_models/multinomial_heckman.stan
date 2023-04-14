@@ -61,12 +61,12 @@ transformed parameters {
   matrix[2, 2] Sigma_1;
   matrix[2, 2] Sigma_2;
   matrix[2, 2] Sigma_3;
-  row_vector[3] initial_mu_1;
-  row_vector[1] initial_mu_2;
+  matrix[3, 1] initial_mu_1;
+  matrix[1, 1] initial_mu_2;
   matrix[3, 3] initial_sigma_11;
-  row_vector[3] initial_sigma_12;
-  row_vector[3] initial_sigma_21;
-  real initial_sigma_22;
+  matrix[3, 1] initial_sigma_12;
+  matrix[1, 3] initial_sigma_21;
+  matrix[1, 1] initial_sigma_22;
 
   gamma_3 = rep_vector(0, k_1);
   sigma_1 = 1;
@@ -105,20 +105,22 @@ transformed parameters {
   Sigma_2 = transformation_matrix_2 * Sigma * transformation_matrix_2';
   Sigma_3 = transformation_matrix_3 * Sigma * transformation_matrix_3';
   
-  initial_mu_1 = [0, 0, 0];
-  initial_mu_2 = [0];
+  initial_mu_1 = [[0], [0], [0]];
+  initial_mu_2 = [[0]];
   initial_sigma_11 = Sigma;
-  initial_sigma_12 = [rho_1u * sigma_u, rho_2u * sigma_2 * sigma_u];
-  initial_sigma_21 = [rho_1u * sigma_u, rho_2u * sigma_2 * sigma_u, 0];
-  initial_sigma_22 = sigma_u ^ 2;
+  initial_sigma_12 = to_matrix([[rho_1u * sigma_u], [rho_2u * sigma_2 * sigma_u], [0]]);
+  initial_sigma_21 = to_matrix([rho_1u * sigma_u, rho_2u * sigma_2 * sigma_u, 0]);
+  initial_sigma_22 = to_matrix([sigma_u ^ 2]);
 }
 
 // Описываем модель
 
 model {
   real log_likelihood_sum = 0;
-  row_vector[3] conditional_mu;
+  matrix[3, 1] conditional_mu;
   matrix[3, 3] conditional_sigma;  
+  matrix[n, 2] conditional_mu_transformed;
+  matrix[2, 2] conditional_sigma_transformed; 
   
   // priors
   rho_12 ~ normal(0, 1);
@@ -147,10 +149,10 @@ model {
     }
     
     if (y[i] != (-1)) {
-      conditional_mu = initial_mu_1 + initial_sigma_12 * (1 / initial_sigma_22) * (y[i] - x[i] * beta);
-      conditional_sigma = initial_sigma_11 - initial_sigma_12 * (1 / initial_sigma_22) * initial_sigma_21;
-      conditional_mu_transformed[, 1] = x * (gamma_2-gamma_1) - (conditional_mu[1] - conditional_mu[2]);
-      conditional_mu_transformed[, 2] = x * (gamma_3-gamma_1) - (conditional_mu[1] - conditional_mu[3]);
+      conditional_mu = initial_mu_1 + initial_sigma_12 * inverse(initial_sigma_22) * (y[i] - x[i] * beta);
+      conditional_sigma = initial_sigma_11 - to_matrix(initial_sigma_12) * inverse(initial_sigma_22) * to_matrix(initial_sigma_21);
+      conditional_mu_transformed[, 1] = x * (gamma_2-gamma_1) - (conditional_mu[1, 1] - conditional_mu[2, 1]);
+      conditional_mu_transformed[, 2] = x * (gamma_3-gamma_1) - (conditional_mu[1, 1] - conditional_mu[3, 1]);
       conditional_sigma_transformed = transformation_matrix_1 * conditional_sigma * transformation_matrix_1';
       
       log_likelihood_sum = log_likelihood_sum + log(
@@ -161,7 +163,8 @@ model {
           conditional_sigma_transformed[2,2], 
           conditional_sigma_transformed[1,2]
           )
-        ) + normal(x * beta, sigma_u);
+        ) +
+          normal_lpdf(y | x * beta, sigma_u);
     }
   }
 }

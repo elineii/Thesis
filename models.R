@@ -1,8 +1,5 @@
 library("switchSelection")
 
-options(scipen = 999)
-set.seed(123)
-
 MLE <- function(df_path, res_path) { 
   res <- data.frame(beta_0=NA, beta_1=NA, beta_3=NA)
   
