@@ -102,6 +102,10 @@ model {
   // priors
   rho_12 ~ normal(0.4, 0.1);
 
+1 0 0
+0 1 0
+0 0 1
+
   for (i in 1:n){
     if ((y[i, 1] == 1) && (y[i, 2] == 0) && (y[i, 3] == 0)) {
       log_likelihood_sum = log_likelihood_sum + log(

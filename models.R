@@ -1,4 +1,5 @@
 library("switchSelection")
+library("rstan")
 
 MLE <- function(df_path, res_path) { 
   res <- data.frame(beta_0=NA, beta_1=NA, beta_3=NA)
@@ -17,4 +18,28 @@ MLE <- function(df_path, res_path) {
     res <- data.frame(beta_0=res[1], beta_1=res[2], beta_3=res[3])
   }, error = function(e) {})
   write.csv(res, res_path, row.names=FALSE)
+}
+
+Bayes <- function(df_path, res_path) { 
+  df <- read.csv(df_path)
+  df <- data.frame(w0=df$w0, w1=df$w1, w2=df$w2, z=df$z,
+                   x0=df$x0, x1=df$x1, x2=df$x2, y=df$y)
+  df$y[is.na(df$y)] <- Inf
+  
+  data <- list(n = dim(df)[1],
+               k_1 = 3,
+               k_2 = 3,
+               w = data.matrix(df[c("w0", "w1", "w2")]),
+               x = data.matrix(df[c("x0", "x1", "x2")]),
+               z = df$z,
+               y = df$y)
+  
+  tryCatch({
+    model <- stan(file = "stan_models/multinomial_heckman.stan",
+                  data = data,                
+                  chains = 1,                 
+                  iter = 2000)
+    res <- extract(model)
+  }, error = function(e) {})
+  saveRDS(res, file=res_path)
 }

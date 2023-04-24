@@ -16,3 +16,12 @@ for (n in n_array) {
     MLE(df_path, df_results)
   }
 }
+
+for (n in n_array) {
+  for (sim in sim_array) {
+    df_path <- glue("data/{simulation_name}/n_{n}/sim_{sim}_n_{n}.csv")
+    df_results <- glue("raw_results/{simulation_name}/Bayes/n_{n}/{simulation_name}_sim_{sim}_n_{n}.RData")
+    dir.create(glue("raw_results/{simulation_name}/Bayes/n_{n}"), recursive = TRUE, showWarnings = FALSE)
+    Bayes(df_path, df_results)
+  }
+}

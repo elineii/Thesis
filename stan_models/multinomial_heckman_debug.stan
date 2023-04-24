@@ -200,6 +200,16 @@ model {
                 )
               );
         }
-      }      
+      }
+      //print("gamma_1:", gamma_1);
+      //print("gamma_2:", gamma_2);
+      print("beta:", beta);
+      //print("sigma_1:", sigma_1);
+      //print("sigma_2:", sigma_2);
+      //print("sigma_u:", sigma_u);
+      //print("rho_12:", rho_12);
+      //print("rho_1u:", rho_1u);
+     // print("rho_2u:", rho_2u);
+      print("log_likelihood_sum:", target());
   }
 }
