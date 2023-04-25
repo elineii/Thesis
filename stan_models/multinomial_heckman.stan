@@ -39,6 +39,12 @@ data {
   matrix[n, k_2] x;                    // выборка для уравнения интенсивности
   vector[n] z;                         // значение таргета уравнения отбора (группа, в которую попало наблюдение)
   vector[n] y;                         // значение таргета уравнения интенсивности
+  vector[k_1] gamma_1_exp_ml;          // значение коэффициентов при оценивании модели ММП (нужно для априорных распределений)
+  vector[k_1] gamma_2_exp_ml;
+  vector[k_2] beta_exp_ml;
+  vector[k_1] gamma_1_sd_ml;           
+  vector[k_1] gamma_2_sd_ml;
+  vector[k_2] beta_sd_ml;
 }
 
 // Указываем параметры
@@ -133,15 +139,15 @@ model {
   rho_2u ~ uniform(-1, 0);
   sigma_2 ~ normal(0, 10);
   sigma_u ~ normal(0, 10);
-  beta[1] ~ normal(0, 10);
-  beta[2] ~ normal(0, 10);
-  beta[3] ~ normal(0, 10);
-  gamma_1[1] ~ normal(0, 10);
-  gamma_1[2] ~ normal(0, 10);
-  gamma_1[3] ~ normal(0, 10);
-  gamma_2[1] ~ normal(0, 10);
-  gamma_2[2] ~ normal(0, 10);
-  gamma_2[3] ~ normal(0, 10);
+  beta[1] ~ normal(beta_exp_ml[1], 3*beta_sd_ml[1]);
+  beta[2] ~ normal(beta_exp_ml[2], 3*beta_sd_ml[2]);
+  beta[3] ~ normal(beta_exp_ml[3], 3*beta_sd_ml[3]);
+  gamma_1[1] ~ normal(gamma_1_exp_ml[1], 3*gamma_1_sd_ml[1]);
+  gamma_1[2] ~ normal(gamma_1_exp_ml[2], 3*gamma_1_sd_ml[2]);
+  gamma_1[3] ~ normal(gamma_1_exp_ml[3], 3*gamma_1_sd_ml[3]);
+  gamma_2[1] ~ normal(gamma_2_exp_ml[1], 3*gamma_2_sd_ml[1]);
+  gamma_2[2] ~ normal(gamma_2_exp_ml[2], 3*gamma_2_sd_ml[2]);
+  gamma_2[3] ~ normal(gamma_2_exp_ml[3], 3*gamma_2_sd_ml[3]);
   
   // covariance matrix check for z[i] == 2 or z[i] == 3
   if (Sigma_1[1, 1] <= 0 || Sigma_2[1, 1] <= 0 || Sigma_3[1, 1] <= 0 || Sigma_1[2, 2] <= 0 || Sigma_2[2, 2] <= 0 || Sigma_3[2, 2] <= 0) {

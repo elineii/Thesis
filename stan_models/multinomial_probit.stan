@@ -59,14 +59,14 @@ transformed parameters {
   beta_3 = rep_vector(0, k);
   sigma_1 = 1;
   
-  mu_transformed_1[, 1] = (x * (beta_2-beta_1));
-  mu_transformed_1[, 2] = (x * (beta_3-beta_1));
+  mu_transformed_1[, 1] = (x * (beta_1-beta_2));
+  mu_transformed_1[, 2] = (x * (beta_1-beta_3));
   
-  mu_transformed_2[, 1] = (x * (beta_1-beta_2));
-  mu_transformed_2[, 2] = (x * (beta_3-beta_2));
+  mu_transformed_2[, 1] = (x * (beta_2-beta_1));
+  mu_transformed_2[, 2] = (x * (beta_2-beta_3));
   
-  mu_transformed_3[, 1] = (x * (beta_1-beta_3));
-  mu_transformed_3[, 2] = (x * (beta_2-beta_3));
+  mu_transformed_3[, 1] = (x * (beta_3-beta_1));
+  mu_transformed_3[, 2] = (x * (beta_3-beta_2));
   
   transformation_matrix_1 = [
     [1, -1, 0],
